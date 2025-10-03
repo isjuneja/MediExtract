@@ -79,7 +79,8 @@ Preferred communication style: Simple, everyday language.
 - **NumPy**: Numerical operations for audio processing
 
 ### Audio Processing Dependencies
-- The system supports multiple audio formats requiring appropriate codec support
+- **ffmpeg**: Required system dependency for audio format conversion and codec support
+- The system supports multiple audio formats: MP3, WAV, M4A, OGG, FLAC, WebM, AAC, WMA, Opus, AIFF, 3GP, AMR
 - WAV format used as intermediate format for compatibility
 - Sample rate preservation during processing for quality maintenance
 
