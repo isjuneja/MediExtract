@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Prescription Processing System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .transcribed-text {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .json-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .medicine-item {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .medicine-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .medicine-detail {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            color: #999;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical Prescription Processor</h1>
+            <p>Upload audio or enter text to extract medicine information</p>
+        </div>
+
+        <div class="card">
+            <div class="input-section">
+                <h2>📁 Upload Audio File</h2>
+                <div class="file-input-wrapper">
+                    <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.ogg,.flac,.webm">
+                </div>
+                <button onclick="processAudio()" id="audioBtn">Process Audio</button>
+            </div>
+
+            <div class="divider">OR</div>
+
+            <div class="input-section">
+                <h2>📝 Enter Prescription Text</h2>
+                <textarea id="textInput" placeholder="Example: Take Amoxicillin 500mg three times daily for 7 days after meals. Paracetamol 650mg twice daily for fever."></textarea>
+                <button onclick="processText()" id="textBtn">Process Text</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <p>⏳ Processing... Please wait.</p>
+            </div>
+
+            <div class="result-section" id="results">
+                <h3>Results</h3>
+                <div id="transcribedSection" style="display: none;">
+                    <h4>Transcribed Text:</h4>
+                    <div class="transcribed-text" id="transcribedText"></div>
+                </div>
+                
+                <h4>Extracted Medicine Data:</h4>
+                <div id="medicineList"></div>
+                
+                <h4>JSON Output:</h4>
+                <pre class="json-output" id="jsonOutput"></pre>
+            </div>
+
+            <div id="errorSection"></div>
+        </div>
+    </div>
+
+    <script>
+        async function processAudio() {
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showError('Please select an audio file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showLoading(true);
+            clearResults();
+
+            try {
+                const response = await fetch('/api/process-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Error processing audio');
+                }
+
+                displayResults(data, true);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function processText() {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+
+            if (!text) {
+                showError('Please enter prescription text');
+                return;
+            }
+
+            showLoading(true);
+            clearResults();
+
+            try {
+                const response = await fetch('/api/process-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Error processing text');
+                }
+
+                displayResults(data, false);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayResults(data, isAudio) {
+            const resultsSection = document.getElementById('results');
+            const transcribedSection = document.getElementById('transcribedSection');
+            const transcribedText = document.getElementById('transcribedText');
+            const medicineList = document.getElementById('medicineList');
+            const jsonOutput = document.getElementById('jsonOutput');
+
+            if (isAudio && data.transcribed_text) {
+                transcribedSection.style.display = 'block';
+                transcribedText.textContent = data.transcribed_text;
+            } else {
+                transcribedSection.style.display = 'none';
+            }
+
+            if (data.medicine_data && data.medicine_data.medicines) {
+                const medicines = data.medicine_data.medicines;
+                
+                if (medicines.length > 0) {
+                    medicineList.innerHTML = medicines.map(med => `
+                        <div class="medicine-item">
+                            <h4>💊 ${med.name || 'Unknown Medicine'}</h4>
+                            ${med.dosage ? `<div class="medicine-detail"><strong>Dosage:</strong> ${med.dosage}</div>` : ''}
+                            ${med.frequency ? `<div class="medicine-detail"><strong>Frequency:</strong> ${med.frequency}</div>` : ''}
+                            ${med.duration ? `<div class="medicine-detail"><strong>Duration:</strong> ${med.duration}</div>` : ''}
+                            ${med.instructions ? `<div class="medicine-detail"><strong>Instructions:</strong> ${med.instructions}</div>` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    medicineList.innerHTML = '<p>No medicines found in the text.</p>';
+                }
+            }
+
+            jsonOutput.textContent = JSON.stringify(data.medicine_data || data, null, 2);
+            resultsSection.classList.add('active');
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const audioBtn = document.getElementById('audioBtn');
+            const textBtn = document.getElementById('textBtn');
+            
+            loading.classList.toggle('active', show);
+            audioBtn.disabled = show;
+            textBtn.disabled = show;
+        }
+
+        function clearResults() {
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('errorSection').innerHTML = '';
+        }
+
+        function showError(message) {
+            const errorSection = document.getElementById('errorSection');
+            errorSection.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+    </script>
+</body>
+</html>
