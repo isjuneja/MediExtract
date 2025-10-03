@@ -149,7 +149,7 @@
             font-size: 0.9em;
         }
 
-        .medicine-item {
+        .medicine-item, .test-item {
             background: #f9f9f9;
             border-left: 4px solid #667eea;
             padding: 15px;
@@ -157,14 +157,38 @@
             border-radius: 4px;
         }
 
-        .medicine-item h4 {
+        .medicine-item h4, .test-item h4 {
             color: #333;
             margin-bottom: 10px;
         }
 
-        .medicine-detail {
+        .medicine-detail, .test-detail {
             color: #666;
             margin: 5px 0;
+        }
+
+        .info-section {
+            background: #f0f4ff;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-section h4 {
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+
+        .info-section p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .data-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .error {
@@ -230,16 +254,25 @@
             </div>
 
             <div class="result-section" id="results">
-                <h3>Results</h3>
+                <h3>📋 Extracted Medical Data</h3>
+                
                 <div id="transcribedSection" style="display: none;">
-                    <h4>Transcribed Text:</h4>
+                    <h4>🎤 Transcribed Text:</h4>
                     <div class="transcribed-text" id="transcribedText"></div>
                 </div>
                 
-                <h4>Extracted Medicine Data:</h4>
-                <div id="medicineList"></div>
+                <div class="data-grid">
+                    <div id="clinicalNotesSection"></div>
+                    <div id="diagnosisSection"></div>
+                    <div id="pastHistorySection"></div>
+                    <div id="otherObservationsSection"></div>
+                </div>
                 
-                <h4>JSON Output:</h4>
+                <div id="medicineSection"></div>
+                <div id="testsPrescribedSection"></div>
+                <div id="testResultsSection"></div>
+                
+                <h4>📄 JSON Output:</h4>
                 <pre class="json-output" id="jsonOutput"></pre>
             </div>
 
@@ -322,7 +355,6 @@
             const resultsSection = document.getElementById('results');
             const transcribedSection = document.getElementById('transcribedSection');
             const transcribedText = document.getElementById('transcribedText');
-            const medicineList = document.getElementById('medicineList');
             const jsonOutput = document.getElementById('jsonOutput');
 
             if (isAudio && data.transcribed_text) {
@@ -332,25 +364,104 @@
                 transcribedSection.style.display = 'none';
             }
 
-            if (data.medicine_data && data.medicine_data.medicines) {
-                const medicines = data.medicine_data.medicines;
-                
-                if (medicines.length > 0) {
-                    medicineList.innerHTML = medicines.map(med => `
-                        <div class="medicine-item">
-                            <h4>💊 ${med.name || 'Unknown Medicine'}</h4>
-                            ${med.dosage ? `<div class="medicine-detail"><strong>Dosage:</strong> ${med.dosage}</div>` : ''}
-                            ${med.frequency ? `<div class="medicine-detail"><strong>Frequency:</strong> ${med.frequency}</div>` : ''}
-                            ${med.duration ? `<div class="medicine-detail"><strong>Duration:</strong> ${med.duration}</div>` : ''}
-                            ${med.instructions ? `<div class="medicine-detail"><strong>Instructions:</strong> ${med.instructions}</div>` : ''}
-                        </div>
-                    `).join('');
-                } else {
-                    medicineList.innerHTML = '<p>No medicines found in the text.</p>';
-                }
+            const medData = data.medicine_data || data;
+
+            if (medData.clinical_notes) {
+                document.getElementById('clinicalNotesSection').innerHTML = `
+                    <div class="info-section">
+                        <h4>📝 Clinical Notes</h4>
+                        <p>${medData.clinical_notes}</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('clinicalNotesSection').innerHTML = '';
             }
 
-            jsonOutput.textContent = JSON.stringify(data.medicine_data || data, null, 2);
+            if (medData.diagnosis) {
+                document.getElementById('diagnosisSection').innerHTML = `
+                    <div class="info-section">
+                        <h4>🔬 Diagnosis</h4>
+                        <p>${medData.diagnosis}</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('diagnosisSection').innerHTML = '';
+            }
+
+            if (medData.past_history) {
+                document.getElementById('pastHistorySection').innerHTML = `
+                    <div class="info-section">
+                        <h4>📋 Past History</h4>
+                        <p>${medData.past_history}</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('pastHistorySection').innerHTML = '';
+            }
+
+            if (medData.other_observations) {
+                document.getElementById('otherObservationsSection').innerHTML = `
+                    <div class="info-section">
+                        <h4>ℹ️ Other Observations</h4>
+                        <p>${medData.other_observations}</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('otherObservationsSection').innerHTML = '';
+            }
+
+            if (medData.medicines && medData.medicines.length > 0) {
+                const medicineHTML = medData.medicines.map(med => `
+                    <div class="medicine-item">
+                        <h4>💊 ${med.name || 'Unknown Medicine'}</h4>
+                        ${med.dosage ? `<div class="medicine-detail"><strong>Dosage:</strong> ${med.dosage}</div>` : ''}
+                        ${med.frequency ? `<div class="medicine-detail"><strong>Frequency:</strong> ${med.frequency}</div>` : ''}
+                        ${med.duration ? `<div class="medicine-detail"><strong>Duration:</strong> ${med.duration}</div>` : ''}
+                        ${med.instructions ? `<div class="medicine-detail"><strong>Instructions:</strong> ${med.instructions}</div>` : ''}
+                    </div>
+                `).join('');
+                document.getElementById('medicineSection').innerHTML = `
+                    <h4>💊 Medicines Prescribed</h4>
+                    ${medicineHTML}
+                `;
+            } else {
+                document.getElementById('medicineSection').innerHTML = '';
+            }
+
+            if (medData.tests_prescribed && medData.tests_prescribed.length > 0) {
+                const testsHTML = medData.tests_prescribed.map(test => `
+                    <div class="test-item">
+                        <h4>🧪 ${test.test_name}</h4>
+                        ${test.purpose ? `<div class="test-detail"><strong>Purpose:</strong> ${test.purpose}</div>` : ''}
+                        ${test.instructions ? `<div class="test-detail"><strong>Instructions:</strong> ${test.instructions}</div>` : ''}
+                    </div>
+                `).join('');
+                document.getElementById('testsPrescribedSection').innerHTML = `
+                    <h4>🧪 Tests Prescribed</h4>
+                    ${testsHTML}
+                `;
+            } else {
+                document.getElementById('testsPrescribedSection').innerHTML = '';
+            }
+
+            if (medData.test_results && medData.test_results.length > 0) {
+                const resultsHTML = medData.test_results.map(result => `
+                    <div class="test-item">
+                        <h4>📊 ${result.test_name}</h4>
+                        <div class="test-detail"><strong>Result:</strong> ${result.result}${result.unit ? ' ' + result.unit : ''}</div>
+                        ${result.reference_range ? `<div class="test-detail"><strong>Reference Range:</strong> ${result.reference_range}</div>` : ''}
+                        ${result.date ? `<div class="test-detail"><strong>Date:</strong> ${result.date}</div>` : ''}
+                    </div>
+                `).join('');
+                document.getElementById('testResultsSection').innerHTML = `
+                    <h4>📊 Test Results</h4>
+                    ${resultsHTML}
+                `;
+            } else {
+                document.getElementById('testResultsSection').innerHTML = '';
+            }
+
+            jsonOutput.textContent = JSON.stringify(medData, null, 2);
             resultsSection.classList.add('active');
         }
 

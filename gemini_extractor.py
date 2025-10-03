@@ -17,8 +17,26 @@ class Medicine(BaseModel):
     duration: Optional[str] = None
     instructions: Optional[str] = None
 
-class PrescriptionData(BaseModel):
-    medicines: List[Medicine]
+class TestPrescribed(BaseModel):
+    test_name: str
+    purpose: Optional[str] = None
+    instructions: Optional[str] = None
+
+class TestResult(BaseModel):
+    test_name: str
+    result: str
+    unit: Optional[str] = None
+    reference_range: Optional[str] = None
+    date: Optional[str] = None
+
+class MedicalData(BaseModel):
+    clinical_notes: Optional[str] = None
+    diagnosis: Optional[str] = None
+    past_history: Optional[str] = None
+    medicines: List[Medicine] = []
+    tests_prescribed: List[TestPrescribed] = []
+    test_results: List[TestResult] = []
+    other_observations: Optional[str] = None
 
 class MedicineExtractor:
     def __init__(self):
@@ -26,23 +44,38 @@ class MedicineExtractor:
     
     def extract_medicine_data(self, text: str) -> dict:
         """
-        Extract structured medicine data from prescription text using Gemini Vision Pro
+        Extract comprehensive medical data from prescription text using Gemini Vision Pro
         """
         try:
-            system_prompt = """You are a medical prescription analyzer. Extract medicine information from the given prescription text.
-            
-For each medicine mentioned, extract:
-- name: The medicine name
-- dosage: The dosage amount (e.g., "500mg", "10ml", "2 tablets")
-- frequency: How often to take (e.g., "twice daily", "three times a day", "every 8 hours")
-- duration: How long to take (e.g., "7 days", "2 weeks", "1 month")
-- instructions: Any special instructions (e.g., "after meals", "before bedtime", "with water")
+            system_prompt = """You are a comprehensive medical data analyzer. Extract all relevant medical information from the given text.
 
-Return a JSON object with a 'medicines' array containing all extracted medicine data.
-If any field is not mentioned, use null for that field.
+Extract the following information:
+
+1. **Clinical Notes**: Any clinical observations, patient complaints, or physician notes
+2. **Diagnosis**: The diagnosed condition(s) or disease(s)
+3. **Past History**: Patient's medical history, previous conditions, or past treatments mentioned
+4. **Medicines**: For each medicine extract:
+   - name: Medicine name
+   - dosage: Dosage amount (e.g., "500mg", "10ml", "2 tablets")
+   - frequency: How often to take (e.g., "twice daily", "three times a day")
+   - duration: How long to take (e.g., "7 days", "2 weeks")
+   - instructions: Special instructions (e.g., "after meals", "before bedtime")
+5. **Tests Prescribed**: Laboratory tests or diagnostic procedures prescribed
+   - test_name: Name of the test
+   - purpose: Why the test is needed (if mentioned)
+   - instructions: Any preparation or special instructions
+6. **Test Results**: Any test results mentioned in the text
+   - test_name: Name of the test
+   - result: The test result value
+   - unit: Unit of measurement (if applicable)
+   - reference_range: Normal range (if mentioned)
+   - date: Date of the test (if mentioned)
+7. **Other Observations**: Any other relevant medical information not covered above
+
+If any field is not mentioned in the text, use null or an empty array as appropriate.
 Be precise and extract exact information from the text."""
 
-            logger.info(f"Extracting medicine data from text: {text[:100]}...")
+            logger.info(f"Extracting comprehensive medical data from text: {text[:100]}...")
             
             response = client.models.generate_content(
                 model=self.model,
@@ -52,7 +85,7 @@ Be precise and extract exact information from the text."""
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     response_mime_type="application/json",
-                    response_schema=PrescriptionData,
+                    response_schema=MedicalData,
                 ),
             )
             
@@ -66,9 +99,15 @@ Be precise and extract exact information from the text."""
                 raise ValueError("Empty response from Gemini model")
         
         except Exception as e:
-            logger.error(f"Error extracting medicine data: {str(e)}", exc_info=True)
+            logger.error(f"Error extracting medical data: {str(e)}", exc_info=True)
             return {
+                "clinical_notes": None,
+                "diagnosis": None,
+                "past_history": None,
                 "medicines": [],
+                "tests_prescribed": [],
+                "test_results": [],
+                "other_observations": None,
                 "error": str(e),
                 "raw_text": text
             }
