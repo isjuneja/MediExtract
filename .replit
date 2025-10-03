@@ -5,7 +5,7 @@ integrations = ["python_gemini:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["ffmpeg-full", "libsndfile", "libxcrypt", "pkg-config", "xsimd"]
+packages = ["ffmpeg-full", "libsndfile", "libxcrypt", "pkg-config", "xsimd", "ffmpeg"]
 
 [workflows]
 runButton = "Project"
@@ -36,5 +36,5 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 44957
+localPort = 43605
 externalPort = 3000

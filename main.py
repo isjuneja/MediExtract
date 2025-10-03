@@ -45,7 +45,7 @@ async def process_audio(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="No file provided")
         
         file_extension = os.path.splitext(file.filename)[1].lower()
-        allowed_extensions = ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.webm']
+        allowed_extensions = ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.webm', '.aac', '.wma', '.opus', '.aiff', '.3gp', '.amr']
         
         if file_extension not in allowed_extensions:
             raise HTTPException(
