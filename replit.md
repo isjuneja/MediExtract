@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a medical prescription processing application that extracts structured medicine information from audio recordings or text input. The system uses speech recognition to convert audio files to text, applies noise reduction for better accuracy, and leverages Google's Gemini AI to extract structured prescription data including medicine names, dosages, frequencies, durations, and special instructions.
+This is a comprehensive medical data processing application that extracts structured medical information from audio recordings or text input. The system uses speech recognition to convert audio files to text, applies noise reduction for better accuracy, and leverages Google's Gemini AI to extract comprehensive medical data including clinical notes, diagnosis, past history, medicines, tests prescribed, test results, and other relevant observations.
 
 ## User Preferences
 
@@ -38,13 +38,20 @@ Preferred communication style: Simple, everyday language.
 
 ### AI Integration
 - **Model**: Google Gemini 2.5 Pro
-- **Approach**: Structured extraction using system prompts that define expected JSON schema
+- **Approach**: Structured extraction using comprehensive system prompts that define expected JSON schema
 - **Output Format**: Pydantic models ensure type safety and consistent API responses
-- **Fields Extracted**: Medicine name, dosage, frequency, duration, and special instructions
+- **Fields Extracted**: 
+  - Clinical notes
+  - Diagnosis
+  - Past medical history
+  - Medicines (name, dosage, frequency, duration, instructions)
+  - Tests prescribed (test name, purpose, instructions)
+  - Test results (test name, result, unit, reference range, date)
+  - Other observations
 
 **Alternatives Considered**: 
 - Local NLP models were considered but Gemini provides superior accuracy for medical terminology
-- Pros: High accuracy, handles medical terminology well, structured output
+- Pros: High accuracy, handles medical terminology well, structured output, comprehensive data extraction
 - Cons: Requires API key, external dependency, potential latency
 
 ### Error Handling
